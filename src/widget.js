@@ -55,7 +55,7 @@ function renderSchools(schools = []) {
   `;
 }
 
-function renderPoi(points = []) {
+export function renderPoiList(points = []) {
   if (!points.length) return '<p class="ili-muted">No nearby places found.</p>';
 
   return `
@@ -67,7 +67,7 @@ function renderPoi(points = []) {
               <strong>${escapeHtml(place.name)}</strong>
               <span>${escapeHtml(place.category || 'Place')}${
                 place.distanceMiles != null ? ` · ${place.distanceMiles} mi` : ''
-              }</span>
+              }${place.source === 'google' ? ' · Google Places' : ''}</span>
             </li>
           `
         )
@@ -259,6 +259,7 @@ export function renderWidget({
   demoMode,
   faqItems = [],
   contactAction = null,
+  showMap = false,
 }) {
   const title = listing.fullAddress || 'Listing Insights';
 
@@ -319,9 +320,18 @@ export function renderWidget({
 
         <section class="ili-card ili-card-wide" aria-labelledby="ili-poi-heading">
           <h3 id="ili-poi-heading">Nearby places</h3>
-          ${renderPoi(localInsights.pointsOfInterest)}
+          ${renderPoiList(localInsights.pointsOfInterest)}
         </section>
       </div>
+
+      ${
+        showMap
+          ? `<section class="ili-card ili-card-wide ili-map-section" aria-labelledby="ili-map-heading">
+              <h3 id="ili-map-heading">Map &amp; nearby points of interest</h3>
+              <div id="ili-map" class="ili-map" role="region" aria-label="Property map"></div>
+            </section>`
+          : ''
+      }
 
       ${renderFaq(faqItems)}
       ${renderContactCta(contactAction)}

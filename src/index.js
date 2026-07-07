@@ -4,7 +4,8 @@ import { fetchLocalInsights, getDemoLocalInsights } from './local-info.js';
 import { injectGeoMarkup } from './geo.js';
 import { findContactAction, attachContactCta } from './contact.js';
 import { initSubheaderReposition } from './reposition-subheader.js';
-import { renderWidget, renderLoading, renderError, mountWidget, attachExpandableToggles } from './widget.js';
+import { initListingMap, isMapEnabled } from './map.js';
+import { renderWidget, renderLoading, renderError, mountWidget, attachExpandableToggles, renderPoiList } from './widget.js';
 
 function findWidgetScript() {
   if (document.currentScript?.src?.includes('idx-listing-insights')) {
@@ -30,6 +31,8 @@ function readConfig() {
     onlyDetailsPages: script?.dataset?.onlyDetailsPages !== 'false',
     autoMount: script?.dataset?.autoMount !== 'false',
     repositionSubheader: script?.dataset?.repositionSubheader !== 'false',
+    googleMapsKey: script?.dataset?.googleMapsKey || script?.dataset?.mapsKey || undefined,
+    mapEnabled: script?.dataset?.mapEnabled !== 'false',
   };
 }
 
@@ -125,11 +128,27 @@ async function initWidget(config) {
         demoMode,
         faqItems,
         contactAction,
+        showMap: isMapEnabled(config),
       })
     );
 
     attachContactCta(container, contactAction);
     attachExpandableToggles(container);
+
+    if (isMapEnabled(config)) {
+      const mapContainer = container.querySelector('#ili-map');
+      const googlePlaces = await initListingMap(mapContainer, listing, config);
+      if (googlePlaces?.length) {
+        localInsights.pointsOfInterest = googlePlaces;
+        const poiSection = container.querySelector('#ili-poi-heading')?.parentElement;
+        if (poiSection) {
+          poiSection.innerHTML = `
+            <h3 id="ili-poi-heading">Nearby places</h3>
+            ${renderPoiList(googlePlaces)}
+          `;
+        }
+      }
+    }
   } catch (error) {
     renderError(container, error.message || 'Unable to load listing insights.');
   }
