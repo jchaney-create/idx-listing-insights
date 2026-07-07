@@ -1,6 +1,7 @@
 import { isDetailsPage, waitForListingData } from './parser.js';
 import { generateListingSummary, buildSummaryHighlights } from './summary.js';
 import { fetchLocalInsights, getDemoLocalInsights } from './local-info.js';
+import { injectGeoMarkup } from './geo.js';
 import { renderWidget, renderLoading, renderError, mountWidget } from './widget.js';
 
 function readConfig() {
@@ -60,6 +61,8 @@ async function initWidget(config) {
       }));
     }
 
+    const faqItems = injectGeoMarkup({ listing, localInsights, summary });
+
     mountWidget(
       container,
       renderWidget({
@@ -68,6 +71,7 @@ async function initWidget(config) {
         highlights,
         localInsights,
         demoMode,
+        faqItems,
       })
     );
   } catch (error) {

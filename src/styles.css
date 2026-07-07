@@ -206,6 +206,51 @@
   color: #991b1b;
 }
 
+.ili-address {
+  font-style: normal;
+  color: var(--ili-muted);
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+}
+
+.ili-faq {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ili-border);
+}
+
+.ili-faq h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+}
+
+.ili-faq-list {
+  margin: 0;
+}
+
+.ili-faq-item {
+  background: #f9fafb;
+  border: 1px solid var(--ili-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.ili-faq-item:last-child {
+  margin-bottom: 0;
+}
+
+.ili-faq-item dt {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ili-faq-item dd {
+  margin: 0;
+  color: var(--ili-muted);
+  line-height: 1.6;
+}
+
 @media (max-width: 768px) {
   .ili-grid,
   .ili-stats,

@@ -151,52 +151,86 @@ function renderWeather(weather) {
   `;
 }
 
-export function renderWidget({ listing, summary, highlights, localInsights, demoMode }) {
+function renderFaq(faqItems = []) {
+  if (!faqItems.length) return '';
+
+  return `
+    <section class="ili-faq" aria-labelledby="ili-faq-heading">
+      <h3 id="ili-faq-heading">Property &amp; neighborhood FAQ</h3>
+      <dl class="ili-faq-list">
+        ${faqItems
+          .map(
+            (item) => `
+              <div class="ili-faq-item">
+                <dt>${escapeHtml(item.question)}</dt>
+                <dd>${escapeHtml(item.answer)}</dd>
+              </div>
+            `
+          )
+          .join('')}
+      </dl>
+    </section>
+  `;
+}
+
+export function renderWidget({ listing, summary, highlights, localInsights, demoMode, faqItems = [] }) {
   const title = listing.fullAddress || 'Listing Insights';
 
   return `
-    <section class="ili-widget" aria-label="Listing insights">
+    <article class="ili-widget" itemscope itemtype="https://schema.org/RealEstateListing" aria-label="Listing insights">
       <header class="ili-header">
         <div>
           <p class="ili-eyebrow">Property overview</p>
-          <h2 class="ili-title">${escapeHtml(title)}</h2>
+          <h2 class="ili-title" itemprop="name">${escapeHtml(title)}</h2>
+          ${
+            listing.fullAddress
+              ? `<address class="ili-address" itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+                  <span itemprop="streetAddress">${escapeHtml(listing.address || '')}</span>,
+                  <span itemprop="addressLocality">${escapeHtml(listing.city || '')}</span>,
+                  <span itemprop="addressRegion">${escapeHtml(listing.state || '')}</span>
+                  <span itemprop="postalCode">${escapeHtml(listing.zipcode || '')}</span>
+                </address>`
+              : ''
+          }
         </div>
         ${demoMode ? '<span class="ili-badge">Demo data</span>' : ''}
       </header>
 
       <div class="ili-summary-card">
         <h3>Listing summary</h3>
-        <p>${escapeHtml(summary)}</p>
+        <p itemprop="description">${escapeHtml(summary)}</p>
         ${renderHighlights(highlights)}
       </div>
 
       <div class="ili-grid">
-        <article class="ili-card">
-          <h3>Walkability</h3>
+        <section class="ili-card" aria-labelledby="ili-walk-heading">
+          <h3 id="ili-walk-heading">Walkability</h3>
           ${renderWalkability(localInsights.walkability)}
-        </article>
+        </section>
 
-        <article class="ili-card">
-          <h3>Weather</h3>
+        <section class="ili-card" aria-labelledby="ili-weather-heading">
+          <h3 id="ili-weather-heading">Weather</h3>
           ${renderWeather(localInsights.weather)}
-        </article>
+        </section>
 
-        <article class="ili-card">
-          <h3>Schools nearby</h3>
+        <section class="ili-card" aria-labelledby="ili-schools-heading">
+          <h3 id="ili-schools-heading">Schools nearby</h3>
           ${renderSchools(localInsights.schools)}
-        </article>
+        </section>
 
-        <article class="ili-card">
-          <h3>Neighborhood</h3>
+        <section class="ili-card" aria-labelledby="ili-neighborhood-heading">
+          <h3 id="ili-neighborhood-heading">Neighborhood</h3>
           ${renderDemographics(localInsights.demographics)}
-        </article>
+        </section>
 
-        <article class="ili-card ili-card-wide">
-          <h3>Nearby places</h3>
+        <section class="ili-card ili-card-wide" aria-labelledby="ili-poi-heading">
+          <h3 id="ili-poi-heading">Nearby places</h3>
           ${renderPoi(localInsights.pointsOfInterest)}
-        </article>
+        </section>
       </div>
-    </section>
+
+      ${renderFaq(faqItems)}
+    </article>
   `;
 }
 
