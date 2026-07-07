@@ -1,7 +1,6 @@
-const DEFAULT_API_BASE = 'http://localhost:8787';
-
 function getApiBase(config) {
-  return config.apiBase || DEFAULT_API_BASE;
+  if (config.apiBase) return config.apiBase.replace(/\/$/, '');
+  return null;
 }
 
 async function fetchJson(url) {
@@ -18,6 +17,9 @@ async function fetchJson(url) {
  */
 export async function fetchLocalInsights(listing, config = {}) {
   const apiBase = getApiBase(config);
+  if (!apiBase) {
+    throw new Error('No API base configured');
+  }
   const params = new URLSearchParams();
 
   if (listing.coordinates?.lat != null && listing.coordinates?.lng != null) {

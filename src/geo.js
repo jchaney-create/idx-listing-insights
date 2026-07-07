@@ -110,7 +110,7 @@ export function buildListingJsonLd(listing, summary) {
     '@type': 'RealEstateListing',
     name: listing.fullAddress || listing.address || 'Property listing',
     description: summary || listing.description || undefined,
-    url: window.location.href,
+    url: listing.pageUrl || window.location.href,
     datePosted: new Date().toISOString().split('T')[0],
   };
 

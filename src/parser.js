@@ -66,29 +66,56 @@ function readAddressFromHeader() {
   const streetEl = document.querySelector('#IDX-detailsAddressStreet');
   const regionEl = document.querySelector('#IDX-detailsAddressRegion');
 
-  const street = streetEl
-    ? Array.from(streetEl.querySelectorAll('span'))
+  if (streetEl || regionEl) {
+    const street = streetEl
+      ? Array.from(streetEl.querySelectorAll('span'))
+          .map((span) => span.textContent?.trim())
+          .filter(Boolean)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+      : '';
+
+    let city = '';
+    let state = '';
+    let zipcode = '';
+
+    if (regionEl) {
+      const spans = Array.from(regionEl.querySelectorAll(':scope > span'))
         .map((span) => span.textContent?.trim())
-        .filter(Boolean)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-    : '';
+        .filter(Boolean);
 
-  let city = '';
-  let state = '';
-  let zipcode = '';
+      if (spans.length >= 1) city = spans[0].replace(/,\s*$/, '');
+      if (spans.length >= 2) state = spans[1];
+      if (spans.length >= 3) zipcode = spans[2];
+    }
 
-  if (regionEl) {
-    const spans = Array.from(regionEl.querySelectorAll(':scope > span'))
-      .map((span) => span.textContent?.trim())
-      .filter(Boolean);
-
-    if (spans.length >= 1) city = spans[0].replace(/,\s*$/, '');
-    if (spans.length >= 2) state = spans[1];
-    if (spans.length >= 3) zipcode = spans[2];
+    return { street, city, state, zipcode };
   }
 
-  return { street, city, state, zipcode };
+  return readLegacyAddressFromDom();
+}
+
+function readLegacyAddressFromDom() {
+  const number = document.querySelector('.IDX-detailsAddressNumber')?.textContent?.trim() ?? '';
+  const name = document.querySelector('.IDX-detailsAddressName')?.textContent?.trim() ?? '';
+  const unit = document.querySelector('.IDX-detailsAddressUnitNumber')?.textContent?.trim() ?? '';
+  const city =
+    document.querySelector('.IDX-detailsAddressCity')?.textContent?.trim().replace(/,\s*$/, '') ?? '';
+  const stateAbrv = document.querySelector('.IDX-detailsAddressStateAbrv')?.textContent?.trim() ?? '';
+  const stateFull = document.querySelector('.IDX-detailsAddressState')?.textContent?.trim() ?? '';
+  const zipcode = document.querySelector('.IDX-detailsAddressZipcode')?.textContent?.trim() ?? '';
+
+  let street = [number, name].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+  if (unit && street && !street.includes(unit)) {
+    street = `${street} ${unit}`.trim();
+  }
+
+  return {
+    street,
+    city,
+    state: stateAbrv || stateFull,
+    zipcode,
+  };
 }
 
 function readMetaKeywords() {
@@ -152,6 +179,8 @@ function readDescription() {
   const candidates = [
     '#IDX-detailsDescription .IDX-clamp__target',
     '#IDX-detailsDescription',
+    '#IDX-description',
+    '#IDX-description .IDX-clamp__target',
     '#IDX-detailsField-remarks',
     '#IDX-detailsField-publicRemarks',
     '.IDX-detailsDescription',
@@ -168,22 +197,30 @@ function readDescription() {
   return ogDescription?.trim() ?? '';
 }
 
+function readFieldWithAliases(...fieldNames) {
+  for (const fieldName of fieldNames) {
+    const value = readByDetailsField(fieldName);
+    if (value) return value;
+  }
+  return '';
+}
+
 function readSchoolsFromDom() {
   const schoolFields = [
-    { key: 'elementarySchool', label: 'Elementary' },
-    { key: 'middleOrJuniorSchool', label: 'Middle School' },
-    { key: 'highSchool', label: 'High School' },
+    { keys: ['elementarySchool'], label: 'Elementary' },
+    { keys: ['middleOrJuniorSchool', 'middleSchool'], label: 'Middle School' },
+    { keys: ['highSchool'], label: 'High School' },
   ];
 
   const schools = schoolFields
-    .map(({ key, label }) => {
-      const name = readByDetailsField(key);
+    .map(({ keys, label }) => {
+      const name = readFieldWithAliases(...keys);
       if (!name) return null;
       return { name, level: label, source: 'mls' };
     })
     .filter(Boolean);
 
-  const district = readByDetailsField('schoolDistrictName');
+  const district = readFieldWithAliases('schoolDistrictName', 'schoolDistrict');
   return { schools, district };
 }
 
@@ -302,6 +339,8 @@ export function parseListingFromDom() {
   return {
     listingId,
     idxId,
+    origin: window.location.origin,
+    pageUrl: window.location.href,
     address,
     city,
     state,
@@ -327,7 +366,7 @@ export function parseListingFromDom() {
 /**
  * Wait for IDX details content to finish loading (some templates populate async).
  */
-export function waitForListingData({ timeoutMs = 8000, intervalMs = 250 } = {}) {
+export function waitForListingData({ timeoutMs = 15000, intervalMs = 250 } = {}) {
   return new Promise((resolve, reject) => {
     const started = Date.now();
 
