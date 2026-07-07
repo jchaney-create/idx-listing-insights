@@ -3,6 +3,8 @@
  * Injects structured data and FAQ content that AI/search systems can cite.
  */
 
+import { summarizeRemarks } from './summary.js';
+
 function cleanObject(obj) {
   return JSON.parse(
     JSON.stringify(obj, (_key, value) => {
@@ -12,7 +14,7 @@ function cleanObject(obj) {
   );
 }
 
-export function buildFaqItems(listing, localInsights, summary) {
+export function buildFaqItems(listing, localInsights, summary, remarksSummary) {
   const location = listing.fullAddress || [listing.city, listing.state].filter(Boolean).join(', ');
   const items = [];
 
@@ -94,7 +96,13 @@ export function buildFaqItems(listing, localInsights, summary) {
     });
   }
 
-  if (summary) {
+  const listingOverview = remarksSummary || summarizeRemarks(listing.description);
+  if (listingOverview) {
+    items.push({
+      question: `What should I know about this listing?`,
+      answer: listingOverview,
+    });
+  } else if (summary) {
     items.push({
       question: `What should I know about this listing?`,
       answer: summary,
@@ -228,8 +236,8 @@ function injectJsonLd(id, data) {
   document.head.appendChild(script);
 }
 
-export function injectGeoMarkup({ listing, localInsights, summary }) {
-  const faqItems = buildFaqItems(listing, localInsights, summary);
+export function injectGeoMarkup({ listing, localInsights, summary, remarksSummary }) {
+  const faqItems = buildFaqItems(listing, localInsights, summary, remarksSummary);
 
   injectJsonLd('idx-listing-insights-listing-schema', buildListingJsonLd(listing, summary));
   injectJsonLd('idx-listing-insights-faq-schema', buildFaqJsonLd(faqItems));

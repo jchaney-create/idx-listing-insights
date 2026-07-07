@@ -173,7 +173,36 @@ function renderFaq(faqItems = []) {
   `;
 }
 
-export function renderWidget({ listing, summary, highlights, localInsights, demoMode, faqItems = [] }) {
+function renderContactCta(contactAction) {
+  if (!contactAction) return '';
+
+  const href =
+    contactAction.type === 'link' && contactAction.href
+      ? escapeHtml(contactAction.href)
+      : '#contact';
+
+  return `
+    <div class="ili-cta">
+      <p>Interested in this property?</p>
+      <a
+        class="ili-cta-button"
+        data-ili-contact-cta
+        href="${href}"
+      >${escapeHtml(contactAction.label)}</a>
+    </div>
+  `;
+}
+
+export function renderWidget({
+  listing,
+  summary,
+  remarksSummary = '',
+  highlights,
+  localInsights,
+  demoMode,
+  faqItems = [],
+  contactAction = null,
+}) {
   const title = listing.fullAddress || 'Listing Insights';
 
   return `
@@ -199,6 +228,14 @@ export function renderWidget({ listing, summary, highlights, localInsights, demo
       <div class="ili-summary-card">
         <h3>Listing summary</h3>
         <p itemprop="description">${escapeHtml(summary)}</p>
+        ${
+          remarksSummary
+            ? `<div class="ili-remarks">
+                <h4>About this property</h4>
+                <p>${escapeHtml(remarksSummary)}</p>
+              </div>`
+            : ''
+        }
         ${renderHighlights(highlights)}
       </div>
 
@@ -230,6 +267,7 @@ export function renderWidget({ listing, summary, highlights, localInsights, demo
       </div>
 
       ${renderFaq(faqItems)}
+      ${renderContactCta(contactAction)}
     </article>
   `;
 }

@@ -1,7 +1,8 @@
 import { isDetailsPage, waitForListingData } from './parser.js';
-import { generateListingSummary, buildSummaryHighlights } from './summary.js';
+import { generateListingSummary, buildSummaryHighlights, summarizeRemarks } from './summary.js';
 import { fetchLocalInsights, getDemoLocalInsights } from './local-info.js';
 import { injectGeoMarkup } from './geo.js';
+import { findContactAction, attachContactCta } from './contact.js';
 import { renderWidget, renderLoading, renderError, mountWidget } from './widget.js';
 
 function findWidgetScript() {
@@ -80,7 +81,9 @@ async function initWidget(config) {
   try {
     const listing = await waitForListingData();
     const summary = generateListingSummary(listing);
+    const remarksSummary = summarizeRemarks(listing.description);
     const highlights = buildSummaryHighlights(listing);
+    const contactAction = findContactAction();
 
     let localInsights;
     let demoMode = config.demoMode;
@@ -107,19 +110,23 @@ async function initWidget(config) {
       }));
     }
 
-    const faqItems = injectGeoMarkup({ listing, localInsights, summary });
+    const faqItems = injectGeoMarkup({ listing, localInsights, summary, remarksSummary });
 
     mountWidget(
       container,
       renderWidget({
         listing,
         summary,
+        remarksSummary,
         highlights,
         localInsights,
         demoMode,
         faqItems,
+        contactAction,
       })
     );
+
+    attachContactCta(container, contactAction);
   } catch (error) {
     renderError(container, error.message || 'Unable to load listing insights.');
   }

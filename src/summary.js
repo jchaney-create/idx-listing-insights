@@ -19,6 +19,29 @@ function truncate(text, maxLength = 220) {
 }
 
 /**
+ * Summarize MLS public remarks for FAQ and GEO content.
+ */
+export function summarizeRemarks(text, maxLength = 450) {
+  if (!text) return '';
+
+  const cleaned = text.replace(/\s+/g, ' ').trim();
+  if (cleaned.length <= maxLength) return cleaned;
+
+  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+  if (sentences.length) {
+    let result = '';
+    for (const sentence of sentences) {
+      const next = `${result}${sentence}`.trim();
+      if (next.length > maxLength) break;
+      result = `${next} `;
+    }
+    if (result.trim()) return result.trim();
+  }
+
+  return truncate(cleaned, maxLength);
+}
+
+/**
  * Build a readable listing summary from parsed DOM data.
  * Uses templated prose rather than an external AI API for the initial version.
  */
@@ -54,10 +77,6 @@ export function generateListingSummary(listing) {
 
   if (listing.schoolDistrict) {
     parts.push(`School district: ${listing.schoolDistrict}.`);
-  }
-
-  if (listing.description) {
-    parts.push(truncate(listing.description));
   }
 
   if (!parts.length) {
