@@ -3,6 +3,7 @@ import { generateListingSummary, buildSummaryHighlights, normalizeRemarks } from
 import { fetchLocalInsights, getDemoLocalInsights } from './local-info.js';
 import { injectGeoMarkup } from './geo.js';
 import { findContactAction, attachContactCta } from './contact.js';
+import { initSubheaderReposition } from './reposition-subheader.js';
 import { renderWidget, renderLoading, renderError, mountWidget, attachExpandableToggles } from './widget.js';
 
 function findWidgetScript() {
@@ -28,6 +29,7 @@ function readConfig() {
     demoMode: demoModeAttr === 'false' ? false : demoModeAttr === 'true' || !hasApiBase,
     onlyDetailsPages: script?.dataset?.onlyDetailsPages !== 'false',
     autoMount: script?.dataset?.autoMount !== 'false',
+    repositionSubheader: script?.dataset?.repositionSubheader !== 'false',
   };
 }
 
@@ -135,6 +137,10 @@ async function initWidget(config) {
 
 function boot() {
   const config = readConfig();
+
+  if (config.repositionSubheader) {
+    initSubheaderReposition();
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => initWidget(config));
