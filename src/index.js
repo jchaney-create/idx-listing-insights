@@ -1,9 +1,9 @@
 import { isDetailsPage, waitForListingData } from './parser.js';
-import { generateListingSummary, buildSummaryHighlights, summarizeRemarks } from './summary.js';
+import { generateListingSummary, buildSummaryHighlights, normalizeRemarks } from './summary.js';
 import { fetchLocalInsights, getDemoLocalInsights } from './local-info.js';
 import { injectGeoMarkup } from './geo.js';
 import { findContactAction, attachContactCta } from './contact.js';
-import { renderWidget, renderLoading, renderError, mountWidget } from './widget.js';
+import { renderWidget, renderLoading, renderError, mountWidget, attachExpandableToggles } from './widget.js';
 
 function findWidgetScript() {
   if (document.currentScript?.src?.includes('idx-listing-insights')) {
@@ -81,7 +81,7 @@ async function initWidget(config) {
   try {
     const listing = await waitForListingData();
     const summary = generateListingSummary(listing);
-    const remarksSummary = summarizeRemarks(listing.description);
+    const remarksSummary = normalizeRemarks(listing.description);
     const highlights = buildSummaryHighlights(listing);
     const contactAction = findContactAction();
 
@@ -127,6 +127,7 @@ async function initWidget(config) {
     );
 
     attachContactCta(container, contactAction);
+    attachExpandableToggles(container);
   } catch (error) {
     renderError(container, error.message || 'Unable to load listing insights.');
   }

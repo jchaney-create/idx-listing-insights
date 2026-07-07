@@ -1,4 +1,5 @@
 import './styles.css';
+import { buildRemarksPreview, normalizeRemarks } from './summary.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -151,6 +152,62 @@ function renderWeather(weather) {
   `;
 }
 
+function renderExpandableText(text, previewLength = 280) {
+  const fullText = normalizeRemarks(text);
+  if (!fullText) return '';
+
+  const preview = buildRemarksPreview(fullText, previewLength);
+  if (preview.length >= fullText.length) {
+    return `<p>${escapeHtml(fullText)}</p>`;
+  }
+
+  return `
+    <div class="ili-expandable" data-ili-expandable>
+      <p class="ili-expandable-preview">${escapeHtml(preview)}</p>
+      <p class="ili-expandable-full ili-is-hidden">${escapeHtml(fullText)}</p>
+      <button
+        type="button"
+        class="ili-expandable-toggle"
+        data-ili-expand-toggle
+        aria-expanded="false"
+      >See more</button>
+    </div>
+  `;
+}
+
+export function attachExpandableToggles(container) {
+  container.querySelectorAll('[data-ili-expandable]').forEach((block) => {
+    const toggle = block.querySelector('[data-ili-expand-toggle]');
+    const preview = block.querySelector('.ili-expandable-preview');
+    const full = block.querySelector('.ili-expandable-full');
+    if (!toggle || !preview || !full) return;
+
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+
+      if (isExpanded) {
+        preview.classList.remove('ili-is-hidden');
+        full.classList.add('ili-is-hidden');
+        toggle.textContent = 'See more';
+        toggle.setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      preview.classList.add('ili-is-hidden');
+      full.classList.remove('ili-is-hidden');
+      toggle.textContent = 'See less';
+      toggle.setAttribute('aria-expanded', 'true');
+    });
+  });
+}
+
+function renderFaqAnswer(item) {
+  if (item.expandable && item.fullAnswer) {
+    return renderExpandableText(item.fullAnswer);
+  }
+  return `<p>${escapeHtml(item.answer)}</p>`;
+}
+
 function renderFaq(faqItems = []) {
   if (!faqItems.length) return '';
 
@@ -163,7 +220,7 @@ function renderFaq(faqItems = []) {
             (item) => `
               <div class="ili-faq-item">
                 <dt>${escapeHtml(item.question)}</dt>
-                <dd>${escapeHtml(item.answer)}</dd>
+                <dd>${renderFaqAnswer(item)}</dd>
               </div>
             `
           )
@@ -232,7 +289,7 @@ export function renderWidget({
           remarksSummary
             ? `<div class="ili-remarks">
                 <h4>About this property</h4>
-                <p>${escapeHtml(remarksSummary)}</p>
+                ${renderExpandableText(remarksSummary, 220)}
               </div>`
             : ''
         }

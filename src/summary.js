@@ -15,16 +15,22 @@ function formatNumber(value) {
 function truncate(text, maxLength = 220) {
   if (!text) return '';
   if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength).trim()}…`;
+  const slice = text.slice(0, maxLength);
+  const lastSpace = slice.lastIndexOf(' ');
+  const trimmed = (lastSpace > 80 ? slice.slice(0, lastSpace) : slice).trim();
+  return `${trimmed}…`;
+}
+
+export function normalizeRemarks(text) {
+  if (!text) return '';
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 /**
- * Summarize MLS public remarks for FAQ and GEO content.
+ * Build a short preview of MLS public remarks for collapsed display.
  */
-export function summarizeRemarks(text, maxLength = 450) {
-  if (!text) return '';
-
-  const cleaned = text.replace(/\s+/g, ' ').trim();
+export function buildRemarksPreview(text, maxLength = 280) {
+  const cleaned = normalizeRemarks(text);
   if (cleaned.length <= maxLength) return cleaned;
 
   const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
@@ -39,6 +45,13 @@ export function summarizeRemarks(text, maxLength = 450) {
   }
 
   return truncate(cleaned, maxLength);
+}
+
+/**
+ * Summarize MLS public remarks for GEO schema and metadata.
+ */
+export function summarizeRemarks(text, maxLength = 450) {
+  return buildRemarksPreview(text, maxLength);
 }
 
 /**

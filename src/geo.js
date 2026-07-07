@@ -3,7 +3,7 @@
  * Injects structured data and FAQ content that AI/search systems can cite.
  */
 
-import { summarizeRemarks } from './summary.js';
+import { summarizeRemarks, normalizeRemarks, buildRemarksPreview } from './summary.js';
 
 function cleanObject(obj) {
   return JSON.parse(
@@ -96,16 +96,13 @@ export function buildFaqItems(listing, localInsights, summary, remarksSummary) {
     });
   }
 
-  const listingOverview = remarksSummary || summarizeRemarks(listing.description);
-  if (listingOverview) {
+  const fullRemarks = normalizeRemarks(listing.description);
+  if (fullRemarks) {
     items.push({
       question: `What should I know about this listing?`,
-      answer: listingOverview,
-    });
-  } else if (summary) {
-    items.push({
-      question: `What should I know about this listing?`,
-      answer: summary,
+      answer: buildRemarksPreview(fullRemarks),
+      fullAnswer: fullRemarks,
+      expandable: true,
     });
   }
 
@@ -182,7 +179,7 @@ export function buildFaqJsonLd(faqItems) {
       name: item.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: item.answer,
+        text: item.fullAnswer || item.answer,
       },
     })),
   });
