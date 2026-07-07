@@ -1,0 +1,23 @@
+{
+  "name": "idx-listing-insights",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Embeddable IDX Broker widget for listing summaries and local area insights",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
